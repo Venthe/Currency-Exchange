@@ -16,4 +16,9 @@ public class InMemoryDomainRepository<ID, AGGREGATE extends Aggregate<ID>> imple
         repository.put(aggregate.getId(), aggregate);
         return aggregate.getId();
     }
+
+    @Override
+    public boolean exists(ID accountId) {
+        return repository.get(accountId) != null;
+    }
 }
