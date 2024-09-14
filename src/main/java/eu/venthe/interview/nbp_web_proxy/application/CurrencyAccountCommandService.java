@@ -2,6 +2,7 @@ package eu.venthe.interview.nbp_web_proxy.application;
 
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountAggregate;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
+import eu.venthe.interview.nbp_web_proxy.domain.CustomerInformation;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +17,7 @@ public class CurrencyAccountCommandService {
     public CurrencyAccountId openAccount(CurrencyAccountSpecification specification) {
         log.trace("Opening a currency account. Specification={}", specification);
 
-        var account = CurrencyAccountAggregate.open(specification.balance());
+        var account = CurrencyAccountAggregate.open(specification.balance(), new CustomerInformation(specification.name(), specification.surname()));
         repository.save(account);
 
         log.debug("Currency account {} opened.", account.getId());

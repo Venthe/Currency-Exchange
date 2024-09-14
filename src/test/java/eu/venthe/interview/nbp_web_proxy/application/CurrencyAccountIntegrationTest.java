@@ -9,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 
 class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
-    private static final CurrencyAccountSpecification EXAMPLE_ACCOUNT_SPECIFICATION = new CurrencyAccountSpecification(Money.of(BigDecimal.ZERO, Money.PLN));
+    private static final Money VALID_BALANCE = Money.of(BigDecimal.ZERO, Money.PLN);
+    private static final CurrencyAccountSpecification EXAMPLE_ACCOUNT_SPECIFICATION = new CurrencyAccountSpecification(VALID_BALANCE, "Jane", "Doe");
 
     @Autowired
     CurrencyAccountCommandService commandService;

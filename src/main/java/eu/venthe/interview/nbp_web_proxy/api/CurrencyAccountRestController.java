@@ -16,7 +16,7 @@ public class CurrencyAccountRestController {
 
     @PostMapping("")
     private CurrencyAccountOpenedDto openAccount(@RequestBody CreateAccountDto accountDto) {
-        var specification = new CurrencyAccountSpecification(accountDto.initialBalance());
+        var specification = new CurrencyAccountSpecification(accountDto.initialBalance(), accountDto.name(), accountDto.surname());
         var openedAccountId = currencyAccountCommandService.openAccount(specification);
         return new CurrencyAccountOpenedDto(openedAccountId);
     }
