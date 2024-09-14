@@ -4,7 +4,7 @@ Celem zadania jest przygotowanie aplikacji serwującej API REST, która pozwoli 
 
 ## Założenia funkcjonalne:
 
-1. ❌ Aplikacja posiada REST API pozwalające na założenie konta walutowego.
+1. ✔️ Aplikacja posiada REST API pozwalające na założenie konta walutowego.
 2. ❌ Przy zakładaniu konta wymagane jest podanie początkowego salda konta w PLN.
 3. ❌ Aplikacja przy zakładaniu konta wymaga od użytkownika podania imienia i nazwiska.
 4. ✔️ Aplikacja przy zakładaniu konta generuje identyfikator konta który powinien być używany przy wywoływaniu dalszych metod API.
