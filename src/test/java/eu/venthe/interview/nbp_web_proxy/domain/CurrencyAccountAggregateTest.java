@@ -22,7 +22,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldHaveIdAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_INITIAL_BALANCE, VALID_CUSTOMER_INFORMATION);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
 
         // when
         Assertions.assertThat(currencyAccount.getId()).isNotNull();
@@ -31,7 +31,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetValidBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_INITIAL_BALANCE, VALID_CUSTOMER_INFORMATION);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
 
         // when
         Assertions.assertThat(currencyAccount.getBalance()).satisfies(balance -> {
@@ -43,7 +43,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetNameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_INITIAL_BALANCE, VALID_CUSTOMER_INFORMATION);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
 
         // when
         Assertions.assertThat(currencyAccount.getName()).isEqualTo(VALID_CUSTOMER_INFORMATION.name());
@@ -52,7 +52,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetSurnameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_INITIAL_BALANCE, VALID_CUSTOMER_INFORMATION);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
 
         // when
         Assertions.assertThat(currencyAccount.getSurname()).isEqualTo(VALID_CUSTOMER_INFORMATION.surname());
@@ -61,7 +61,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldNotCreateAccountWhenInitialBalanceIsEmpty() {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(null, VALID_CUSTOMER_INFORMATION);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, null);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(NullPointerException.class);
@@ -71,7 +71,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAccountWhenCustomerInformationIsEmpty(CustomerInformation customerInformation) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_INITIAL_BALANCE, customerInformation);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(customerInformation, VALID_INITIAL_BALANCE);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -92,7 +92,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAnAccountWhenBalanceIsNotInPLN(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(Money.of(BigDecimal.ZERO, currency), VALID_CUSTOMER_INFORMATION);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency));
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);

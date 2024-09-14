@@ -68,7 +68,7 @@ class CurrencyAccountRestControllerTest {
 
     @SneakyThrows
     String body(Money initialBalance) {
-        var dto = new CreateAccountDto(initialBalance, "Jane", "Doe");
+        var dto = new CreateAccountDto("Jane", "Doe", initialBalance);
         return objectMapper.writeValueAsString(dto);
     }
 

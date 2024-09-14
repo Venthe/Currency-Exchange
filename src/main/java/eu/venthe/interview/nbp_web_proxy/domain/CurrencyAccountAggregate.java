@@ -17,7 +17,7 @@ public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
     private final String surname;
     private Money balance;
 
-    private CurrencyAccountAggregate(@NonNull CurrencyAccountId id, @NonNull Money initialBalance, CustomerInformation customerInformation) {
+    private CurrencyAccountAggregate(@NonNull CurrencyAccountId id, CustomerInformation customerInformation, @NonNull Money initialBalance) {
         validateCustomerInformation(customerInformation);
 
         this.id = id;
@@ -53,7 +53,7 @@ public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
         this.balance = balance;
     }
 
-    public static CurrencyAccountAggregate open(Money initialBalance, CustomerInformation customerInformation) {
-        return new CurrencyAccountAggregate(CurrencyAccountId.create(), initialBalance, customerInformation);
+    public static CurrencyAccountAggregate open(CustomerInformation customerInformation, Money initialBalance) {
+        return new CurrencyAccountAggregate(CurrencyAccountId.create(), customerInformation, initialBalance);
     }
 }
