@@ -17,7 +17,7 @@ Celem zadania jest przygotowanie aplikacji serwującej API REST, która pozwoli 
     1. I've picked `Java 21` due to familiarity.
 2. ✔️ Aplikacja może być wykonana w dowolnym frameworku.
     1. I've picked `Spring Boot 3` due to substantial amount of available integrations.
-3. ❌ Aplikacja nie musi zachowywać danych po restarcie.
+3. ✔️ Aplikacja nie musi zachowywać danych po restarcie.
 4. ❌ Kod źródłowy aplikacji powinien zostać udostępniony na wybranym portalu do hostowania kodu (np. Gitlab, Github, Bitbucket).
 5. ✔️ Aplikacja musi być budowana przy pomocy narzędzia do budowania aplikacji (np. Maven, Gradle).
     1. I've decided in favour of `gradle` as it satisfies both simplicity at the beginning as well as flexibility if needed.
