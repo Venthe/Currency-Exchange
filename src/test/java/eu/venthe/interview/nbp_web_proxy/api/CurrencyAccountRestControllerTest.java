@@ -1,18 +1,28 @@
 package eu.venthe.interview.nbp_web_proxy.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.venthe.interview.nbp_web_proxy.application.CurrencyAccountCommandService;
+import eu.venthe.interview.nbp_web_proxy.application.CurrencyAccountSpecification;
 import eu.venthe.interview.nbp_web_proxy.configuration.JacksonConfiguration;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
+import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
+import lombok.SneakyThrows;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -21,6 +31,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = CurrencyAccountRestController.class)
 @Import(JacksonConfiguration.class)
 class CurrencyAccountRestControllerTest {
+    private static final Money EXAMPLE_AMOUNT = Money.of(BigDecimal.ZERO, Money.PLN);
+
+    @Autowired
+    ObjectMapper objectMapper;
+
     @Autowired
     MockMvc mockMvc;
 
@@ -29,12 +44,39 @@ class CurrencyAccountRestControllerTest {
 
     @Test
     void openCurrencyAccount() throws Exception {
+        // given
         var currencyAccountId = CurrencyAccountId.create();
-        Mockito.when(mockCurrencyAccountCommandService.openAccount()).thenReturn(currencyAccountId);
+        Mockito.doAnswer(specification(currencyAccountId)).when(mockCurrencyAccountCommandService).openAccount(any());
+        var body = body(EXAMPLE_AMOUNT);
 
-        mockMvc.perform(post("/api/currency-account"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("{\"id\": \"%s\"}".formatted(currencyAccountId.value().toString()), true));
+        // when
+        var result = mockMvc.perform(post("/api/currency-account").content(body).contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        result.andExpect(status().isOk())
+                .andExpect(content().json(expectedResult(currencyAccountId), true));
+    }
+
+    @SneakyThrows
+    String body(Money initialBalance) {
+        var dto = new CreateAccountDto(initialBalance);
+        return objectMapper.writeValueAsString(dto);
+    }
+
+    @SneakyThrows
+    String expectedResult(CurrencyAccountId id) {
+        var dto = new CurrencyAccountOpenedDto(id);
+        return objectMapper.writeValueAsString(dto);
+    }
+
+    private static Answer specification(CurrencyAccountId currencyAccountId) {
+        return invocation -> {
+            CurrencyAccountSpecification argument = invocation.getArgument(0);
+            if (argument.balance().compareTo(EXAMPLE_AMOUNT) != 0) {
+                Assertions.fail("Incorrectly parsed balance");
+            }
+            return currencyAccountId;
+        };
     }
 
 }

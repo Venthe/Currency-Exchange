@@ -13,10 +13,10 @@ import org.springframework.stereotype.Service;
 public class CurrencyAccountCommandService {
     private final CurrencyAccountRepository repository;
 
-    public CurrencyAccountId openAccount() {
-        log.trace("Opening a currency account.");
+    public CurrencyAccountId openAccount(CurrencyAccountSpecification specification) {
+        log.trace("Opening a currency account. Specification={}", specification);
 
-        var account = CurrencyAccountAggregate.open();
+        var account = CurrencyAccountAggregate.open(specification.balance());
         repository.save(account);
 
         log.debug("Currency account {} opened.", account.getId());

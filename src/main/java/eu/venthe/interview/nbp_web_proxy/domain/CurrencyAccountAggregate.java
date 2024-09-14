@@ -1,19 +1,28 @@
 package eu.venthe.interview.nbp_web_proxy.domain;
 
+import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.persistence.Aggregate;
-import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
-    @Getter
     @EqualsAndHashCode.Include
     private final CurrencyAccountId id;
+    private Money balance;
 
-    public static CurrencyAccountAggregate open() {
-        return new CurrencyAccountAggregate(CurrencyAccountId.create());
+    private CurrencyAccountAggregate(@NonNull CurrencyAccountId id, @NonNull Money initialBalance) {
+        this.id = id;
+        setBalance(initialBalance);
+    }
+
+    private void setBalance(Money balance) {
+        this.balance = balance;
+    }
+
+    public static CurrencyAccountAggregate open(Money initialBalance) {
+        return new CurrencyAccountAggregate(CurrencyAccountId.create(), initialBalance);
     }
 }
