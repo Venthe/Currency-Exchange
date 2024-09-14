@@ -26,4 +26,18 @@ class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
 
         Assertions.assertThat(result).isTrue();
     }
+
+    @Test
+    void canCheckBasicAccountInformation() {
+        var accountId = commandService.openAccount(EXAMPLE_ACCOUNT_SPECIFICATION);
+
+        var result = queryService.getAccountInformation(accountId).orElseThrow();
+
+        Assertions.assertThat(result).satisfies(r -> {
+            Assertions.assertThat(r.balance()).isEqualByComparingTo(VALID_BALANCE);
+            Assertions.assertThat(r.id()).isEqualTo(accountId);
+            Assertions.assertThat(r.ownerName()).isEqualTo(EXAMPLE_ACCOUNT_SPECIFICATION.name());
+            Assertions.assertThat(r.ownerSurname()).isEqualTo(EXAMPLE_ACCOUNT_SPECIFICATION.surname());
+        });
+    }
 }

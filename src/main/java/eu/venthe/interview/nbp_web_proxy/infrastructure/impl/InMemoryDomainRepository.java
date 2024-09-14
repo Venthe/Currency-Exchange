@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class InMemoryDomainRepository<ID, AGGREGATE extends Aggregate<ID>> implements DomainRepository<ID, AGGREGATE> {
@@ -20,5 +21,10 @@ public class InMemoryDomainRepository<ID, AGGREGATE extends Aggregate<ID>> imple
     @Override
     public boolean exists(ID accountId) {
         return repository.get(accountId) != null;
+    }
+
+    @Override
+    public Optional<AGGREGATE> find(ID accountId) {
+        return Optional.ofNullable(repository.get(accountId));
     }
 }

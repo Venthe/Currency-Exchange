@@ -1,7 +1,9 @@
 package eu.venthe.interview.nbp_web_proxy.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.venthe.interview.nbp_web_proxy.application.AccountInformationReadModel;
 import eu.venthe.interview.nbp_web_proxy.application.CurrencyAccountCommandService;
+import eu.venthe.interview.nbp_web_proxy.application.CurrencyAccountQueryService;
 import eu.venthe.interview.nbp_web_proxy.application.CurrencyAccountSpecification;
 import eu.venthe.interview.nbp_web_proxy.configuration.JacksonConfiguration;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
@@ -21,9 +23,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +47,9 @@ class CurrencyAccountRestControllerTest {
     @MockBean
     CurrencyAccountCommandService mockCurrencyAccountCommandService;
 
+    @MockBean
+    CurrencyAccountQueryService currencyAccountQueryService;
+
     @Test
     void openCurrencyAccount() throws Exception {
         // given
@@ -53,7 +61,8 @@ class CurrencyAccountRestControllerTest {
         var result = mockMvc.perform(post("/api/currency-account").content(body).contentType(MediaType.APPLICATION_JSON));
 
         // then
-        result.andExpect(status().isOk())
+        result.andDo(print())
+                .andExpect(status().isOk())
                 .andExpect(content().json(expectedResult(currencyAccountId), true));
     }
 
@@ -79,4 +88,25 @@ class CurrencyAccountRestControllerTest {
         };
     }
 
+    @Test
+    void getAccountInformation() throws Exception {
+        // given
+        var currencyAccountId = CurrencyAccountId.create();
+        var accountInformation = new AccountInformationReadModel(
+                currencyAccountId,
+                "John",
+                "Doe",
+                Money.of(BigDecimal.TEN, Money.PLN)
+        );
+        Mockito.when(currencyAccountQueryService.getAccountInformation(currencyAccountId))
+                .thenReturn(Optional.of(accountInformation));
+
+        // when
+        var result = mockMvc.perform(get("/api/currency-account/{accountId}", currencyAccountId.value().toString()));
+
+        // then
+        result.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(new AccountInformationDto(accountInformation)), true));
+    }
 }

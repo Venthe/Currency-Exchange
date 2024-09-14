@@ -7,6 +7,8 @@ import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.InMemoryDomainRepos
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Optional;
+
 @Configuration
 public class CurrencyAccountRepositoryConfiguration {
     @Bean
@@ -22,6 +24,11 @@ public class CurrencyAccountRepositoryConfiguration {
             @Override
             public boolean exists(CurrencyAccountId accountId) {
                 return repository.exists(accountId);
+            }
+
+            @Override
+            public Optional<CurrencyAccountAggregate> find(CurrencyAccountId accountId) {
+                return repository.find(accountId);
             }
         };
     }
