@@ -6,6 +6,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
+import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.PLN;
+
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Getter
 public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
@@ -19,6 +21,9 @@ public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
     }
 
     private void setBalance(Money balance) {
+        if (!balance.getCurrency().equals(PLN)) {
+            throw new IllegalArgumentException();
+        }
         this.balance = balance;
     }
 
