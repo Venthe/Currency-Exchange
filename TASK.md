@@ -21,5 +21,5 @@ Celem zadania jest przygotowanie aplikacji serwującej API REST, która pozwoli 
 4. ❌ Kod źródłowy aplikacji powinien zostać udostępniony na wybranym portalu do hostowania kodu (np. Gitlab, Github, Bitbucket).
 5. ✔️ Aplikacja musi być budowana przy pomocy narzędzia do budowania aplikacji (np. Maven, Gradle).
     1. I've decided in favour of `gradle` as it satisfies both simplicity at the beginning as well as flexibility if needed.
-6. ❌ W przypadku niesprecyzowania czegoś w zadaniu - pozostaje dowolność.
-7. ❌ W przypadku pytań – można się dopytywać mailowo.
+6. ⚠️ W przypadku niesprecyzowania czegoś w zadaniu - pozostaje dowolność.
+7. ⚠️ W przypadku pytań – można się dopytywać mailowo.
