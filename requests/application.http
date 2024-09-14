@@ -1,0 +1,35 @@
+### Create a new account
+POST {{url}}/api/currency-account
+Content-Type: application/json
+
+{
+  "name": "John",
+  "surname": "Doe",
+  "initial-balance": {
+    "amount": 1000,
+    "currency": "PLN"
+  },
+  "exchange-currency": "USD"
+}
+> {% client.global.set("accountId", response.body.id); %}
+
+### Get account information (uses saved accountId)
+GET {{url}}/api/currency-account/{{accountId}}
+
+### Exchange currency to base (uses saved accountId)
+POST {{url}}/api/currency-account/{{accountId}}/exchange
+Content-Type: application/json
+
+{
+  "direction": "TO_BASE",
+  "amount": 50
+}
+
+### Exchange currency to target (uses saved accountId)
+POST {{url}}/api/currency-account/{{accountId}}/exchange
+Content-Type: application/json
+
+{
+  "direction": "TO_TARGET",
+  "amount": 50
+}
