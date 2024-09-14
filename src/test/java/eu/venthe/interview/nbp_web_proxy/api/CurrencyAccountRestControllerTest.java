@@ -10,6 +10,7 @@ import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
@@ -109,5 +110,40 @@ class CurrencyAccountRestControllerTest {
         result.andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(new AccountInformationDto(accountInformation)), true));
+    }
+
+    @Nested
+    class Exchange {
+        @Test
+        void toBase() throws Exception {
+            var currencyAccountId = CurrencyAccountId.create();
+            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_BASE);
+
+            var result = mockMvc.perform(post(
+                    "/api/currency-account/{accountId}/exchange",
+                    currencyAccountId.value().toString()).content(objectMapper.writeValueAsString(exchangeCurrencyDto)).contentType(MediaType.APPLICATION_JSON)
+            );
+
+            result.andDo(print())
+                    .andExpect(status().isOk());
+
+            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToBaseCurrency(currencyAccountId, BigDecimal.ONE);
+        }
+
+        @Test
+        void toTarget() throws Exception {
+            var currencyAccountId = CurrencyAccountId.create();
+            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_TARGET);
+
+            var result = mockMvc.perform(post(
+                    "/api/currency-account/{accountId}/exchange",
+                    currencyAccountId.value().toString()).content(objectMapper.writeValueAsString(exchangeCurrencyDto)).contentType(MediaType.APPLICATION_JSON)
+            );
+
+            result.andDo(print())
+                    .andExpect(status().isOk());
+
+            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToTargetCurrency(currencyAccountId, BigDecimal.ONE);
+        }
     }
 }

@@ -23,6 +23,17 @@ public class CurrencyAccountRestController {
         return new CurrencyAccountOpenedDto(openedAccountId);
     }
 
+    @PostMapping("/{accountId}/exchange")
+    private void exchangeCurrency(@PathVariable CurrencyAccountId accountId, @RequestBody ExchangeCurrencyDto exchangeCurrencyDto) {
+        switch (exchangeCurrencyDto.direction()) {
+            case TO_BASE ->
+                    currencyAccountCommandService.exchangeToBaseCurrency(accountId, exchangeCurrencyDto.amount());
+            case TO_TARGET ->
+                    currencyAccountCommandService.exchangeToTargetCurrency(accountId, exchangeCurrencyDto.amount());
+            default -> throw new UnsupportedOperationException();
+        }
+    }
+
     @GetMapping("/{accountId}")
     private Optional<AccountInformationDto> getAccountInformation(@PathVariable CurrencyAccountId accountId) {
         var accountInformation = currencyAccountQueryService.getAccountInformation(accountId);
