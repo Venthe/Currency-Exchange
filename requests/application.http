@@ -16,20 +16,20 @@ Content-Type: application/json
 ### Get account information (uses saved accountId)
 GET {{url}}/api/currency-account/{{accountId}}
 
-### Exchange currency to base (uses saved accountId)
-POST {{url}}/api/currency-account/{{accountId}}/exchange
-Content-Type: application/json
-
-{
-  "direction": "TO_BASE",
-  "amount": 50
-}
-
 ### Exchange currency to target (uses saved accountId)
 POST {{url}}/api/currency-account/{{accountId}}/exchange
 Content-Type: application/json
 
 {
   "direction": "TO_TARGET",
+  "amount": 50
+}
+
+### Exchange currency to base (uses saved accountId)
+POST {{url}}/api/currency-account/{{accountId}}/exchange
+Content-Type: application/json
+
+{
+  "direction": "TO_BASE",
   "amount": 50
 }

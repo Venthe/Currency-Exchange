@@ -1,0 +1,5 @@
+GET https://api.nbp.pl/api/exchangerates/rates/a/usd/2024-09-13/
+
+###
+
+GET https://api.nbp.pl/api/exchangerates/rates/c/usd/
