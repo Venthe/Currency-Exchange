@@ -1,30 +1,40 @@
 package eu.venthe.interview.nbp_web_proxy.domain;
 
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
+import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.ThrowableAssert;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
 import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.PLN;
 import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.USD;
+import static org.mockito.ArgumentMatchers.any;
 
 class CurrencyAccountAggregateTest {
 
     private static final CustomerInformation VALID_CUSTOMER_INFORMATION = new CustomerInformation("Jane", "Doe");
     private static final Money VALID_INITIAL_BALANCE = Money.of(BigDecimal.ZERO, PLN);
     private static final Currency EXAMPLE_EXCHANGE_CURRENCY = USD;
+    private static final CurrencyExchangeService MOCK_EXCHANGE_SERVICE = Mockito.mock(CurrencyExchangeService.class);
 
     @Test
     void shouldHaveIdAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getId()).isNotNull();
@@ -33,7 +43,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetValidOriginalBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getOriginalBalance()).satisfies(balance -> {
@@ -45,7 +55,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetValidExchangedBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getExchangedBalance()).satisfies(balance -> {
@@ -57,7 +67,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetNameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getName()).isEqualTo(VALID_CUSTOMER_INFORMATION.name());
@@ -66,7 +76,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetSurnameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getSurname()).isEqualTo(VALID_CUSTOMER_INFORMATION.surname());
@@ -75,7 +85,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldNotCreateAccountWhenInitialBalanceIsEmpty() {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, null, EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, null, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(NullPointerException.class);
@@ -85,7 +95,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAccountWhenExchangeCurrencyIsNotUSD(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, currency);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, currency);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(UnsupportedOperationException.class).hasMessage("Opening different accounts than USD is not yet supported");
@@ -101,7 +111,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAccountWhenCustomerInformationIsEmpty(CustomerInformation customerInformation) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(customerInformation, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, customerInformation, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -122,7 +132,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAnAccountWhenBalanceIsNotInPLN(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency), EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency), EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -132,5 +142,137 @@ class CurrencyAccountAggregateTest {
         return Currency.getAvailableCurrencies().stream()
                 .filter(e -> !e.equals(PLN))
                 .map(Arguments::of);
+    }
+
+    @Nested
+    class Exchange {
+
+        @Test
+        void shouldThrowErrorWhenTheBalanceIsTooLowToExchangeToBaseCurrency() {
+            // given
+            var account = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
+
+            // when
+            ThrowableAssert.ThrowingCallable throwable = () -> account.exchangeToBaseCurrency(BigDecimal.ONE);
+
+            // when
+            Assertions.assertThatThrownBy(throwable)
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Exchanged amount cannot exceed the exchanged balance");
+        }
+
+        @Test
+        void shouldThrowErrorWhenTheBalanceIsTooLowToExchangeToTargetCurrency() {
+            // given
+            var account = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
+
+            // when
+            ThrowableAssert.ThrowingCallable throwable = () -> account.exchangeToTargetCurrency(BigDecimal.ONE);
+
+            // when
+            Assertions.assertThatThrownBy(throwable)
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Exchanged amount cannot exceed the original balance");
+        }
+
+        @SneakyThrows
+        @ParameterizedTest
+        @MethodSource
+        void exchangeScenarios(Money initialBalance,
+                               Function<CurrencyAccountAggregate, CurrencyAccountAggregate> operator,
+                               Money newBaseBalance,
+                               Money newTargetBalance) {
+            // given
+            var account = CurrencyAccountAggregate.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, initialBalance, EXAMPLE_EXCHANGE_CURRENCY);
+            Mockito.doAnswer(setupExchange()).when(MOCK_EXCHANGE_SERVICE).exchange(any(Money.class), any(Currency.class));
+
+            // when
+            operator.apply(account);
+
+            // when
+            Assertions.assertThat(account.getOriginalBalance())
+                    .isEqualTo(newBaseBalance);
+            Assertions.assertThat(account.getExchangedBalance())
+                    .isEqualTo(newTargetBalance);
+        }
+
+        static Stream<Arguments> exchangeScenarios() {
+            return Stream.<Arguments>builder()
+                    .add(Arguments.of(
+                            pln(10),
+                            exchangeToTargetCurrency(10),
+                            pln(0),
+                            usd(5)
+                    ))
+                    .add(Arguments.of(
+                            pln(1),
+                            exchangeToTargetCurrency(0.5),
+                            pln(0.5),
+                            usd(0.25)
+                    ))
+                    .add(Arguments.of(
+                            pln(0.000001),
+                            exchangeToTargetCurrency(0.0000005),
+                            pln(0.0000005),
+                            usd(0.0000003)
+                    ))
+                    .add(Arguments.of(
+                            pln(1),
+                            exchangeToTargetCurrency(1).andThen(exchangeToBaseCurrency(0.25)),
+                            pln(0.5),
+                            usd(0.25)
+                    ))
+                    .build();
+        }
+
+        @SneakyThrows
+        private static UnaryOperator<CurrencyAccountAggregate> exchangeToTargetCurrency(double amount) {
+            return agg -> {
+                try {
+                    agg.exchangeToTargetCurrency(BigDecimal.valueOf(amount));
+                    return agg;
+                } catch (CurrencyExchangeFailedException e) {
+                    throw new RuntimeException();
+                }
+            };
+        }
+
+        private static UnaryOperator<CurrencyAccountAggregate> exchangeToBaseCurrency(double amount) {
+            return agg -> {
+                try {
+                    agg.exchangeToBaseCurrency(BigDecimal.valueOf(amount));
+                    return agg;
+                } catch (CurrencyExchangeFailedException e) {
+                    throw new RuntimeException();
+                }
+            };
+        }
+
+        private static Money pln(double amount) {
+            return money(amount, PLN);
+        }
+
+        private static Money usd(double amount) {
+            return money(amount, USD);
+        }
+
+        private static Money money(double amount, Currency pln) {
+            return Money.of(BigDecimal.valueOf(amount), pln);
+        }
+
+        private static Answer setupExchange() {
+            return invocationOnMock -> {
+                Money money = invocationOnMock.getArgument(0);
+                Currency currency = invocationOnMock.getArgument(1);
+
+                if (money.getCurrency() == PLN && currency == USD) {
+                    return Money.of(money.divide(BigDecimal.TWO).getAmount(), USD);
+                } else if (money.getCurrency() == USD && currency == PLN) {
+                    return Money.of(money.multiply(BigDecimal.TWO).getAmount(), PLN);
+                }
+
+                throw new RuntimeException();
+            };
+        }
     }
 }
