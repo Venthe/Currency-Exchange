@@ -13,7 +13,7 @@ public class CurrencyAccountAggregate implements Aggregate<CurrencyAccountId> {
     @EqualsAndHashCode.Include
     private final CurrencyAccountId id;
 
-    public static CurrencyAccountAggregate create() {
+    public static CurrencyAccountAggregate open() {
         return new CurrencyAccountAggregate(CurrencyAccountId.create());
     }
 }

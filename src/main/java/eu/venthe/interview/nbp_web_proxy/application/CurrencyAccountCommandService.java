@@ -16,7 +16,7 @@ public class CurrencyAccountCommandService {
     public CurrencyAccountId openAccount() {
         log.trace("Opening a currency account.");
 
-        var account = CurrencyAccountAggregate.create();
+        var account = CurrencyAccountAggregate.open();
         repository.save(account);
 
         log.debug("Currency account {} opened.", account.getId());

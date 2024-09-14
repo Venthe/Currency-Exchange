@@ -7,7 +7,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldHaveIdAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.create();
+        var currencyAccount = CurrencyAccountAggregate.open();
 
         // when
         Assertions.assertThat(currencyAccount.getId()).isNotNull();
