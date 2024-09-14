@@ -68,7 +68,7 @@ class CurrencyAccountRestControllerTest {
 
     @SneakyThrows
     String body(Money initialBalance) {
-        var dto = new CreateAccountDto("Jane", "Doe", initialBalance);
+        var dto = new CreateAccountDto("Jane", "Doe", initialBalance, Money.USD);
         return objectMapper.writeValueAsString(dto);
     }
 
@@ -82,7 +82,7 @@ class CurrencyAccountRestControllerTest {
         return invocation -> {
             CurrencyAccountSpecification argument = invocation.getArgument(0);
             if (argument.balance().compareTo(EXAMPLE_AMOUNT) != 0) {
-                Assertions.fail("Incorrectly parsed balance");
+                Assertions.fail("Incorrectly parsed originalBalance");
             }
             return currencyAccountId;
         };
@@ -96,7 +96,8 @@ class CurrencyAccountRestControllerTest {
                 currencyAccountId,
                 "John",
                 "Doe",
-                Money.of(BigDecimal.TEN, Money.PLN)
+                Money.of(BigDecimal.TEN, Money.PLN),
+                Money.of(BigDecimal.ZERO, Money.USD)
         );
         Mockito.when(currencyAccountQueryService.getAccountInformation(currencyAccountId))
                 .thenReturn(Optional.of(accountInformation));

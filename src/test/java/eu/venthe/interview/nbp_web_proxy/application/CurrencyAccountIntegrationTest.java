@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 
 class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
     private static final Money VALID_BALANCE = Money.of(BigDecimal.ZERO, Money.PLN);
-    private static final CurrencyAccountSpecification EXAMPLE_ACCOUNT_SPECIFICATION = new CurrencyAccountSpecification(VALID_BALANCE, "Jane", "Doe");
+    private static final CurrencyAccountSpecification EXAMPLE_ACCOUNT_SPECIFICATION = new CurrencyAccountSpecification("Jane", "Doe", VALID_BALANCE, Money.USD);
 
     @Autowired
     CurrencyAccountCommandService commandService;
@@ -34,7 +34,7 @@ class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
         var result = queryService.getAccountInformation(accountId).orElseThrow();
 
         Assertions.assertThat(result).satisfies(r -> {
-            Assertions.assertThat(r.balance()).isEqualByComparingTo(VALID_BALANCE);
+            Assertions.assertThat(r.originalBalance()).isEqualByComparingTo(VALID_BALANCE);
             Assertions.assertThat(r.id()).isEqualTo(accountId);
             Assertions.assertThat(r.ownerName()).isEqualTo(EXAMPLE_ACCOUNT_SPECIFICATION.name());
             Assertions.assertThat(r.ownerSurname()).isEqualTo(EXAMPLE_ACCOUNT_SPECIFICATION.surname());

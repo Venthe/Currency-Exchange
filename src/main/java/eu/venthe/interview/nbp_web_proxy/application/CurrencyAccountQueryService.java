@@ -19,6 +19,6 @@ public class CurrencyAccountQueryService {
     public Optional<AccountInformationReadModel> getAccountInformation(CurrencyAccountId accountId) {
         // Consider replacing with a visitor
         return repository.find(accountId)
-                .map(e -> new AccountInformationReadModel(e.getId(), e.getName(), e.getSurname(), e.getBalance()));
+                .map(e -> new AccountInformationReadModel(e.getId(), e.getName(), e.getSurname(), e.getOriginalBalance(), e.getExchangedBalance()));
     }
 }

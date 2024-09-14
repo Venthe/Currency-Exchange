@@ -13,37 +13,51 @@ import java.util.Currency;
 import java.util.stream.Stream;
 
 import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.PLN;
+import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.USD;
 
 class CurrencyAccountAggregateTest {
 
     private static final CustomerInformation VALID_CUSTOMER_INFORMATION = new CustomerInformation("Jane", "Doe");
     private static final Money VALID_INITIAL_BALANCE = Money.of(BigDecimal.ZERO, PLN);
+    private static final Currency EXAMPLE_EXCHANGE_CURRENCY = USD;
 
     @Test
     void shouldHaveIdAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getId()).isNotNull();
     }
 
     @Test
-    void shouldSetValidBalanceAfterCreation() {
+    void shouldSetValidOriginalBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
-        Assertions.assertThat(currencyAccount.getBalance()).satisfies(balance -> {
+        Assertions.assertThat(currencyAccount.getOriginalBalance()).satisfies(balance -> {
             Assertions.assertThat(balance.getAmount()).isEqualByComparingTo(BigDecimal.ZERO);
             Assertions.assertThat(balance.getCurrency()).isEqualTo(PLN);
         });
     }
 
     @Test
+    void shouldSetValidExchangedBalanceAfterCreation() {
+        // given
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+
+        // when
+        Assertions.assertThat(currencyAccount.getExchangedBalance()).satisfies(balance -> {
+            Assertions.assertThat(balance.getAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+            Assertions.assertThat(balance.getCurrency()).isEqualTo(USD);
+        });
+    }
+
+    @Test
     void shouldSetNameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getName()).isEqualTo(VALID_CUSTOMER_INFORMATION.name());
@@ -52,7 +66,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldSetSurnameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE);
+        var currencyAccount = CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getSurname()).isEqualTo(VALID_CUSTOMER_INFORMATION.surname());
@@ -61,7 +75,7 @@ class CurrencyAccountAggregateTest {
     @Test
     void shouldNotCreateAccountWhenInitialBalanceIsEmpty() {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, null);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, null, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(NullPointerException.class);
@@ -69,9 +83,25 @@ class CurrencyAccountAggregateTest {
 
     @ParameterizedTest
     @MethodSource
+    void shouldNotCreateAccountWhenExchangeCurrencyIsNotUSD(Currency currency) {
+        // given
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, currency);
+
+        // when
+        Assertions.assertThatThrownBy(throwable).isInstanceOf(UnsupportedOperationException.class).hasMessage("Opening different accounts than USD is not yet supported");
+    }
+
+    static Stream<Arguments> shouldNotCreateAccountWhenExchangeCurrencyIsNotUSD() {
+        return Currency.getAvailableCurrencies().stream()
+                .filter(e -> !e.equals(USD))
+                .map(Arguments::of);
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void shouldNotCreateAccountWhenCustomerInformationIsEmpty(CustomerInformation customerInformation) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(customerInformation, VALID_INITIAL_BALANCE);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(customerInformation, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -92,7 +122,7 @@ class CurrencyAccountAggregateTest {
     @MethodSource
     void shouldNotCreateAnAccountWhenBalanceIsNotInPLN(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency));
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccountAggregate.open(VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency), EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);

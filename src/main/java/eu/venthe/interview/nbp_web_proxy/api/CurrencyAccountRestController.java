@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -19,7 +18,7 @@ public class CurrencyAccountRestController {
 
     @PostMapping("")
     private CurrencyAccountOpenedDto openAccount(@RequestBody CreateAccountDto accountDto) {
-        var specification = new CurrencyAccountSpecification(accountDto.initialBalance(), accountDto.name(), accountDto.surname());
+        var specification = new CurrencyAccountSpecification(accountDto.name(), accountDto.surname(), accountDto.initialBalance(), accountDto.exchangeCurrency());
         var openedAccountId = currencyAccountCommandService.openAccount(specification);
         return new CurrencyAccountOpenedDto(openedAccountId);
     }
