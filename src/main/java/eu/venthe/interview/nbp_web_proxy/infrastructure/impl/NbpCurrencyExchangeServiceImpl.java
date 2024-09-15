@@ -78,12 +78,17 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
     }
 
     // TODO: Cache the result
-    private Rate getNewestExchangeRateFor(Currency otherCurrency) {
+    private Rate getNewestExchangeRateFor(Currency otherCurrency) throws CurrencyExchangeFailedException {
         // FIXME: Use apiExchangeratesRatesTableCodeGet
         //  For some reason, the object is not fully populated with data. To work around the issue, I'm extracting data
         //  from JsonNode manually.
-        // TODO: Handle non-200 errors
-        var root = apiClient.apiExchangeratesRatesTableCodeGetWithResponseSpec(Table.C, otherCurrency.getCurrencyCode(), Format.JSON).body(JsonNode.class);
+        var responseEntity = apiClient.apiExchangeratesRatesTableCodeGetWithResponseSpec(Table.C, otherCurrency.getCurrencyCode(), Format.JSON).toEntity(JsonNode.class);
+
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            throw new CurrencyExchangeFailedException();
+        }
+
+        var root = responseEntity.getBody();
 
         var ratesNode = root.get("rates");
         if (ratesNode.size() != 1) {

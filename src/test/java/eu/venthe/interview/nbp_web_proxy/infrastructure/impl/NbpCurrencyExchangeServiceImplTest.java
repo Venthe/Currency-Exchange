@@ -3,6 +3,7 @@ package eu.venthe.interview.nbp_web_proxy.infrastructure.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
 import eu.venthe.nbp.api.DefaultApi;
@@ -16,6 +17,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -73,6 +76,19 @@ class NbpCurrencyExchangeServiceImplTest {
                 .hasMessage("At this point we don't support exchanging between two non-PLN currencies. Base currency=USD, Target currency=CHF");
     }
 
+    @Test
+    void exchangeServiceFailed() {
+        var response = Mockito.mock(ResponseEntity.class);
+        Mockito.when(response.getStatusCode())
+                .thenReturn(HttpStatusCode.valueOf(400));
+        Mockito.when(mockApi.apiExchangeratesRatesTableCodeGetWithResponseSpec(eq(Table.C), any(String.class), eq(Format.JSON)).toEntity(JsonNode.class))
+                .thenReturn(response);
+
+        Assertions.assertThatThrownBy(() ->
+                        currencyExchangeService.exchange(of(BigDecimal.ONE, USD), PLN))
+                .isInstanceOf(CurrencyExchangeFailedException.class);
+    }
+
     @SneakyThrows
     @Test
     void sameCurrencyExchangeNotSupported() {
@@ -123,7 +139,13 @@ class NbpCurrencyExchangeServiceImplTest {
                 """.formatted(FORMATTER.format(rate));
         var root = new ObjectMapper().readTree(formatted);
 
-        Mockito.when(mockApi.apiExchangeratesRatesTableCodeGetWithResponseSpec(eq(Table.C), any(String.class), eq(Format.JSON)).body(JsonNode.class))
+        var response = Mockito.mock(ResponseEntity.class);
+        Mockito.when(response.getStatusCode())
+                .thenReturn(HttpStatusCode.valueOf(200));
+        Mockito.when(response.getBody())
                 .thenReturn(root);
+
+        Mockito.when(mockApi.apiExchangeratesRatesTableCodeGetWithResponseSpec(eq(Table.C), any(String.class), eq(Format.JSON)).toEntity(JsonNode.class))
+                .thenReturn(response);
     }
 }
