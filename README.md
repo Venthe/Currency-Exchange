@@ -24,7 +24,6 @@ Commits follow a "[good commit message](https://cbea.ms/git-commit/)" convention
 
 ## To do
 
-- Add audit trail to the currency exchange
 - Add prometheus library to enable metrics
 - Add micrometer library to enable tracing
 - Add Archunit test library and tests to ensure clean structure

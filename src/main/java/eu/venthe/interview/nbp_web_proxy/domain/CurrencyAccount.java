@@ -1,5 +1,6 @@
 package eu.venthe.interview.nbp_web_proxy.domain;
 
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.AuditLogger;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
@@ -25,6 +26,8 @@ import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.USD;
 public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
     @Getter(AccessLevel.NONE)
     private final CurrencyExchangeService currencyExchangeService;
+    @Getter(AccessLevel.NONE)
+    private final AuditLogger auditLogger;
 
     @EqualsAndHashCode.Include
     private final CurrencyAccountId id;
@@ -39,8 +42,9 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
      */
     private Money foreignBalance;
 
-    private CurrencyAccount(CurrencyExchangeService currencyExchangeService, @NonNull CurrencyAccountId id, CustomerInformation customerInformation, @NonNull Money initialBalance, @NonNull Money initialForeignBalance) {
+    private CurrencyAccount(AuditLogger auditLogger, CurrencyExchangeService currencyExchangeService, @NonNull CurrencyAccountId id, CustomerInformation customerInformation, @NonNull Money initialBalance, @NonNull Money initialForeignBalance) {
         this.currencyExchangeService = currencyExchangeService;
+        this.auditLogger = auditLogger;
         validateCustomerInformation(customerInformation);
 
         this.id = id;
@@ -48,6 +52,8 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
         surname = customerInformation.surname();
         setOriginalBalance(initialBalance);
         setForeignBalance(initialForeignBalance);
+
+        auditLogger.accountOpened(id, originalBalance, foreignBalance);
     }
 
     private static void validateCustomerInformation(CustomerInformation customerInformation) {
@@ -85,12 +91,12 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
     }
 
     // TODO: Consider moving into a factory
-    public static CurrencyAccount open(CurrencyExchangeService currencyExchangeService, CustomerInformation customerInformation, Money initialBalance, Currency foreignCurrency) {
+    public static CurrencyAccount open(AuditLogger auditLogger, CurrencyExchangeService currencyExchangeService, CustomerInformation customerInformation, Money initialBalance, Currency foreignCurrency) {
         if (foreignCurrency != USD) {
             throw new UnsupportedOperationException("Opening different accounts than USD is not yet supported");
         }
 
-        return new CurrencyAccount(currencyExchangeService, CurrencyAccountId.create(), customerInformation, initialBalance, Money.of(BigDecimal.ZERO, USD));
+        return new CurrencyAccount(auditLogger, currencyExchangeService, CurrencyAccountId.create(), customerInformation, initialBalance, Money.of(BigDecimal.ZERO, USD));
     }
 
     public void exchangeToForeignCurrency(BigDecimal amount) throws CurrencyExchangeFailedException {
@@ -106,6 +112,8 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
 
         log.trace("Exchange succeeded. Exchanged={} to={}, Old OriginalBalance={}, New OriginalBalance={}, Old ForeignBalance={}, New ForeignBalance={}",
                 moneyToExchange, exchangedAmount, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
+
+        auditLogger.currencyExchanged(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
         originalBalance = newOriginalBalance;
         foreignBalance = newForeignBalance;
@@ -124,6 +132,8 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
 
         log.trace("Exchange succeeded. Exchanged={} to={}, Old OriginalBalance={}, New OriginalBalance={}, Old ForeignBalance={}, New ForeignBalance={}",
                 moneyToExchange, exchangedAmount, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
+
+        auditLogger.currencyExchanged(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
         foreignBalance = newForeignBalance;
         originalBalance = newOriginalBalance;

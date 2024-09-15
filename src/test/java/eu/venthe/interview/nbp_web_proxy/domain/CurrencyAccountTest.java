@@ -1,5 +1,6 @@
 package eu.venthe.interview.nbp_web_proxy.domain;
 
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.AuditLogger;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
@@ -30,11 +31,12 @@ class CurrencyAccountTest {
     private static final Money VALID_INITIAL_BALANCE = Money.of(BigDecimal.ZERO, PLN);
     private static final Currency EXAMPLE_EXCHANGE_CURRENCY = USD;
     private static final CurrencyExchangeService MOCK_EXCHANGE_SERVICE = Mockito.mock(CurrencyExchangeService.class);
+    private static final AuditLogger MOCK_AUDIT_LOGGER = Mockito.mock(AuditLogger.class);
 
     @Test
     void shouldHaveIdAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getId()).isNotNull();
@@ -43,7 +45,7 @@ class CurrencyAccountTest {
     @Test
     void shouldSetValidOriginalBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getOriginalBalance()).satisfies(balance -> {
@@ -55,7 +57,7 @@ class CurrencyAccountTest {
     @Test
     void shouldSetValidExchangedBalanceAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getForeignBalance()).satisfies(balance -> {
@@ -67,7 +69,7 @@ class CurrencyAccountTest {
     @Test
     void shouldSetNameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getName()).isEqualTo(VALID_CUSTOMER_INFORMATION.name());
@@ -76,7 +78,7 @@ class CurrencyAccountTest {
     @Test
     void shouldSetSurnameAfterCreation() {
         // given
-        var currencyAccount = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        var currencyAccount = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThat(currencyAccount.getSurname()).isEqualTo(VALID_CUSTOMER_INFORMATION.surname());
@@ -85,7 +87,7 @@ class CurrencyAccountTest {
     @Test
     void shouldNotCreateAccountWhenInitialBalanceIsEmpty() {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, null, EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, null, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(NullPointerException.class);
@@ -95,7 +97,7 @@ class CurrencyAccountTest {
     @MethodSource
     void shouldNotCreateAccountWhenExchangeCurrencyIsNotUSD(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, currency);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, VALID_INITIAL_BALANCE, currency);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(UnsupportedOperationException.class).hasMessage("Opening different accounts than USD is not yet supported");
@@ -111,7 +113,7 @@ class CurrencyAccountTest {
     @MethodSource
     void shouldNotCreateAccountWhenCustomerInformationIsEmpty(CustomerInformation customerInformation) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, customerInformation, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, customerInformation, VALID_INITIAL_BALANCE, EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -132,7 +134,7 @@ class CurrencyAccountTest {
     @MethodSource
     void shouldNotCreateAnAccountWhenBalanceIsNotInPLN(Currency currency) {
         // given
-        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency), EXAMPLE_EXCHANGE_CURRENCY);
+        ThrowableAssert.ThrowingCallable throwable = () -> CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, currency), EXAMPLE_EXCHANGE_CURRENCY);
 
         // when
         Assertions.assertThatThrownBy(throwable).isInstanceOf(IllegalArgumentException.class);
@@ -150,7 +152,7 @@ class CurrencyAccountTest {
         @Test
         void shouldThrowErrorWhenTheForeignBalanceIsTooLowToExchangeToOriginalCurrency() {
             // given
-            var account = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
+            var account = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
 
             // when
             ThrowableAssert.ThrowingCallable throwable = () -> account.exchangeToOriginalCurrency(BigDecimal.ONE);
@@ -164,7 +166,7 @@ class CurrencyAccountTest {
         @Test
         void shouldThrowErrorWhenTheOriginalBalanceIsTooLowToExchangeToForeignCurrency() {
             // given
-            var account = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
+            var account = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, Money.of(BigDecimal.ZERO, PLN), EXAMPLE_EXCHANGE_CURRENCY);
 
             // when
             ThrowableAssert.ThrowingCallable throwable = () -> account.exchangeToForeignCurrency(BigDecimal.ONE);
@@ -183,7 +185,7 @@ class CurrencyAccountTest {
                                Money expectedOriginalBalance,
                                Money expectedForeignBalance) {
             // given
-            var account = CurrencyAccount.open(MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, initialBalance, EXAMPLE_EXCHANGE_CURRENCY);
+            var account = CurrencyAccount.open(MOCK_AUDIT_LOGGER, MOCK_EXCHANGE_SERVICE, VALID_CUSTOMER_INFORMATION, initialBalance, EXAMPLE_EXCHANGE_CURRENCY);
             Mockito.doAnswer(setupExchange()).when(MOCK_EXCHANGE_SERVICE).exchange(any(Money.class), any(Currency.class));
 
             // when

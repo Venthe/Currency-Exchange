@@ -3,6 +3,7 @@ package eu.venthe.interview.nbp_web_proxy.application;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccount;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
 import eu.venthe.interview.nbp_web_proxy.domain.CustomerInformation;
+import eu.venthe.interview.nbp_web_proxy.domain.dependencies.AuditLogger;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyAccountRepository;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
@@ -18,11 +19,12 @@ import java.math.BigDecimal;
 public class CurrencyAccountCommandService {
     private final CurrencyAccountRepository repository;
     private final CurrencyExchangeService currencyExchangeService;
+    private final AuditLogger auditLogger;
 
     public CurrencyAccountId openAccount(CurrencyAccountSpecification specification) {
         log.trace("Opening a currency account. Specification={}", specification);
 
-        var account = CurrencyAccount.open(currencyExchangeService, new CustomerInformation(specification.name(), specification.surname()), specification.initialBalance(), specification.foreignCurrency());
+        var account = CurrencyAccount.open(auditLogger, currencyExchangeService, new CustomerInformation(specification.name(), specification.surname()), specification.initialBalance(), specification.foreignCurrency());
         repository.save(account);
 
         log.debug("Currency account {} opened.", account.getId());
