@@ -1,3 +1,5 @@
 spring:
   application:
     name: nbp_web_proxy
+currencyExchange:
+  url: https://api.nbp.pl

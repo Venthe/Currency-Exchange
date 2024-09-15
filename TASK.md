@@ -8,7 +8,7 @@ Celem zadania jest przygotowanie aplikacji serwującej API REST, która pozwoli 
 2. ✔️ Przy zakładaniu konta wymagane jest podanie początkowego salda konta w PLN.
 3. ✔️ Aplikacja przy zakładaniu konta wymaga od użytkownika podania imienia i nazwiska.
 4. ✔️ Aplikacja przy zakładaniu konta generuje identyfikator konta który powinien być używany przy wywoływaniu dalszych metod API.
-5. ❌ Aplikacja powinna udostępnić REST API do wymiany pieniędzy w parze PLN<->USD (czyli PLN na USD oraz USD na PLN), a aktualny kurs wymiany pobrać z publicznego API NBP (http://api.nbp.pl/).
+5. ✔️ Aplikacja powinna udostępnić REST API do wymiany pieniędzy w parze PLN<->USD (czyli PLN na USD oraz USD na PLN), a aktualny kurs wymiany pobrać z publicznego API NBP (http://api.nbp.pl/).
 6. ✔️ Aplikacja powinna udostępnić REST API do pobrania danych o koncie i jego aktualnego stanu w PLN i USD.
 
 ## Założenia niefunkcjonalne:
