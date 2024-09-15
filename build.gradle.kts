@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
     id("io.freefair.lombok") version "8.10"
     id("org.openapi.generator") version "7.8.0"
+    pmd
 }
 
 group = "eu.venthe.interview"
