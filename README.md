@@ -21,3 +21,26 @@ Commits follow a "[good commit message](https://cbea.ms/git-commit/)" convention
    1. Build using `gradle bootJar`
    2. (Optional) Build using docker `bash ./build.sh` on linux
    3. (Optional) Build using docker `build.ps1` on windows
+
+## To do
+
+- Add audit trail to the currency exchange
+- Add prometheus library to enable metrics
+- Add micrometer library to enable tracing
+- Add Archunit test library and tests to ensure clean structure
+- Add static analysis & linting tooling
+  - Add PMD
+  - Add SpotBugs
+  - Add OWASP Dependency-Check
+  - Add checkstyle
+- Add persistence
+    - (Optional) Consider test containers
+- Extend application API
+  - Add OpenApi contract
+  - (Optional) Add rate limiting
+  - (Optional) Add HATEOAS
+- (Optional) Add JavaDoc rendering to documentation
+- (Optional) Add security library
+  - Consider LDAP
+  - Consider OAuth2
+- (Optional) Add feature flags library
