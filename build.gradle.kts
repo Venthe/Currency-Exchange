@@ -5,6 +5,7 @@ plugins {
     id("io.freefair.lombok") version "8.10"
     id("org.openapi.generator") version "7.8.0"
     pmd
+    id("com.github.spotbugs") version "6.0.22"
 }
 
 group = "eu.venthe.interview"
@@ -68,4 +69,15 @@ tasks.configureEach {
     if (name == "generateEffectiveLombokConfig") {
         mustRunAfter(tasks.openApiGenerate)
     }
+}
+
+spotbugs {
+    // For initial configuration
+    ignoreFailures = true
+    extraArgs = listOf(
+        "-emacs",
+        "-longBugCodes",
+        "-sarif=${project.rootDir}/build/spotbugs/report.sarif.json",
+        "-html=${project.rootDir}/build/spotbugs/report.html"
+    )
 }

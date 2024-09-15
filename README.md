@@ -28,7 +28,6 @@ Commits follow a "[good commit message](https://cbea.ms/git-commit/)" convention
 - Add micrometer library to enable tracing
 - Add Archunit test library and tests to ensure clean structure
 - Add static analysis & linting tooling
-  - Add SpotBugs
   - Add OWASP Dependency-Check
   - Add checkstyle
 - Add persistence
