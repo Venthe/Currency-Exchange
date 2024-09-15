@@ -3,7 +3,7 @@ package eu.venthe.interview.nbp_web_proxy.configuration;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
 import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.InMemoryCacheManager;
 import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.NbpCurrencyExchangeServiceImpl;
-import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.NbpRate;
+import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.NBPExchangeRate;
 import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.StubCurrencyExchangeServiceImpl;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.ClockService;
 import eu.venthe.nbp.api.DefaultApi;
@@ -37,7 +37,7 @@ public class CurrencyExchangeServiceConfiguration {
     @Bean
     @ConditionalOnProperty(name = "currency-exchange.stub", havingValue = "false", matchIfMissing = true)
     public CurrencyExchangeService currencyExchangeRealService(ClockService clockService, DefaultApi defaultApi) {
-        var cacheManager = new InMemoryCacheManager<NbpRate>();
+        var cacheManager = new InMemoryCacheManager<NBPExchangeRate>();
         return new NbpCurrencyExchangeServiceImpl(cacheManager, clockService, defaultApi);
     }
 }

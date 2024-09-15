@@ -1,6 +1,6 @@
 package eu.venthe.interview.nbp_web_proxy.configuration;
 
-import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountAggregate;
+import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccount;
 import eu.venthe.interview.nbp_web_proxy.domain.CurrencyAccountId;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyAccountRepository;
 import eu.venthe.interview.nbp_web_proxy.infrastructure.impl.InMemoryDomainRepository;
@@ -14,10 +14,10 @@ public class CurrencyAccountRepositoryConfiguration {
     @Bean
     CurrencyAccountRepository currencyAccountRepository() {
         return new CurrencyAccountRepository() {
-            private final InMemoryDomainRepository<CurrencyAccountId, CurrencyAccountAggregate> repository = new InMemoryDomainRepository<>();
+            private final InMemoryDomainRepository<CurrencyAccountId, CurrencyAccount> repository = new InMemoryDomainRepository<>();
 
             @Override
-            public CurrencyAccountId save(CurrencyAccountAggregate aggregate) {
+            public CurrencyAccountId save(CurrencyAccount aggregate) {
                 return repository.save(aggregate);
             }
 
@@ -27,7 +27,7 @@ public class CurrencyAccountRepositoryConfiguration {
             }
 
             @Override
-            public Optional<CurrencyAccountAggregate> find(CurrencyAccountId accountId) {
+            public Optional<CurrencyAccount> find(CurrencyAccountId accountId) {
                 return repository.find(accountId);
             }
         };

@@ -21,11 +21,11 @@ import java.util.Currency;
 
 @Slf4j
 public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
-    private final CacheManager<NbpRate> cacheManager;
+    private final CacheManager<NBPExchangeRate> cacheManager;
     private final ClockService clockService;
     private final DefaultApi apiClient;
 
-    public NbpCurrencyExchangeServiceImpl(CacheManager<NbpRate> cacheManager, ClockService clockService, DefaultApi apiClient) {
+    public NbpCurrencyExchangeServiceImpl(CacheManager<NBPExchangeRate> cacheManager, ClockService clockService, DefaultApi apiClient) {
         this.clockService = clockService;
         this.apiClient = apiClient;
         this.cacheManager = cacheManager;
@@ -34,7 +34,7 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
     @Override
     public Money exchange(@NonNull Money money, @NonNull Currency targetCurrency) throws CurrencyExchangeFailedException {
         if (!exchangeFromPLN(money) && !exchangeToPLN(targetCurrency)) {
-            throw new UnsupportedOperationException(MessageFormat.format("At this point we don''t support exchanging between two non-PLN currencies. Base currency={0}, Target currency={1}", money.getCurrency(), targetCurrency));
+            throw new UnsupportedOperationException(MessageFormat.format("At this point we don''t support exchanging between two non-PLN currencies. Original currency={0}, Target currency={1}", money.getCurrency(), targetCurrency));
         }
 
         if (exchangeBetweenSameCurrencies(money, targetCurrency)) {
@@ -85,7 +85,7 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
         return money.getCurrency().equals(Money.PLN);
     }
 
-    private NbpRate getNewestExchangeRateFor(Currency otherCurrency) throws CurrencyExchangeFailedException {
+    private NBPExchangeRate getNewestExchangeRateFor(Currency otherCurrency) throws CurrencyExchangeFailedException {
         var expectedEffectiveDate = getExpectedEffectiveDateAdjustedForWeekends();
         var cacheKey = getCacheKey(otherCurrency, expectedEffectiveDate);
         if (cacheManager.isCached(cacheKey)) {
@@ -111,7 +111,7 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
         }
         var rateNode = ratesNode.get(0);
 
-        var nbpRate = new NbpRate(
+        var rate = new NBPExchangeRate(
                 toBigDecimal(rateNode.get("ask")),
                 toBigDecimal(rateNode.get("bid")),
                 toLocalDate(rateNode.get("effectiveDate"))
@@ -119,13 +119,13 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
 
         // NBP publishes new rates between 7:45 and 8:15, so in the morning the rates should not be cached
         // This also handles weekend backdate, as the published rates are already dated on friday
-        var rateCacheKey = getCacheKey(otherCurrency, nbpRate.effectiveDate());
+        var rateCacheKey = getCacheKey(otherCurrency, rate.effectiveDate());
         if (!cacheManager.isCached(rateCacheKey)) {
-            log.debug("Storing rate in cache. Rate={}", nbpRate);
-            cacheManager.store(cacheKey, nbpRate);
+            log.debug("Storing rate in cache. Rate={}", rate);
+            cacheManager.store(cacheKey, rate);
         }
 
-        return nbpRate;
+        return rate;
     }
 
     private LocalDate toLocalDate(JsonNode node) {

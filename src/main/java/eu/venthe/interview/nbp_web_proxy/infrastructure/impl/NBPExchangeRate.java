@@ -10,8 +10,8 @@ import java.time.LocalDate;
  * @param bid           The price a buyer is willing to pay for a currency.
  * @param effectiveDate The date on which the rate is taken into account.
  */
-public record NbpRate(BigDecimal ask,
-               BigDecimal bid,
-               LocalDate effectiveDate) {
+public record NBPExchangeRate(BigDecimal ask,
+                              BigDecimal bid,
+                              LocalDate effectiveDate) {
 
 }

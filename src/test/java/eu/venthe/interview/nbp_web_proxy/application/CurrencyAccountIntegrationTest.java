@@ -53,17 +53,17 @@ class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
 
     @SneakyThrows
     @Test
-    void canExchangeToTargetCurrency() {
+    void canExchangeToForeignCurrency() {
         // given
         var initialBalance = Money.of(BigDecimal.TEN, Money.PLN);
         var moneyAfterConversion = Money.of(BigDecimal.TWO, Money.USD);
         var exchangedValue = BigDecimal.valueOf(5);
         Mockito.when(currencyExchangeService.exchange(Money.of(exchangedValue, Money.PLN), Money.USD)).thenReturn(moneyAfterConversion);
 
-        var accountId = commandService.openAccount(EXAMPLE_ACCOUNT_SPECIFICATION.withBalance(initialBalance));
+        var accountId = commandService.openAccount(EXAMPLE_ACCOUNT_SPECIFICATION.withInitialBalance(initialBalance));
 
         // when
-        commandService.exchangeToTargetCurrency(accountId, exchangedValue);
+        commandService.exchangeToForeignCurrency(accountId, exchangedValue);
 
         // then
         var result = queryService.getAccountInformation(accountId).orElseThrow();
@@ -78,7 +78,7 @@ class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
 
     @SneakyThrows
     @Test
-    void canExchangeToBaseCurrency() {
+    void canExchangeToOriginalCurrency() {
         // given
         var exchangedValue = BigDecimal.valueOf(5);
         var initialBalance = Money.of(exchangedValue, Money.PLN);
@@ -87,11 +87,11 @@ class CurrencyAccountIntegrationTest extends AbstractBaseIntegrationTest {
         Mockito.when(currencyExchangeService.exchange(Money.of(exchangedValue, Money.PLN), Money.USD)).thenReturn(moneyAfterFirstConversion);
         Mockito.when(currencyExchangeService.exchange(Money.of(BigDecimal.ONE, Money.USD), Money.PLN)).thenReturn(moneyAfterSecondConversion);
 
-        var accountId = commandService.openAccount(EXAMPLE_ACCOUNT_SPECIFICATION.withBalance(initialBalance));
-        commandService.exchangeToTargetCurrency(accountId, exchangedValue);
+        var accountId = commandService.openAccount(EXAMPLE_ACCOUNT_SPECIFICATION.withInitialBalance(initialBalance));
+        commandService.exchangeToForeignCurrency(accountId, exchangedValue);
 
         // when
-        commandService.exchangeToBaseCurrency(accountId, BigDecimal.ONE);
+        commandService.exchangeToOriginalCurrency(accountId, BigDecimal.ONE);
 
         // then
         var result = queryService.getAccountInformation(accountId).orElseThrow();

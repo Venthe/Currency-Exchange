@@ -82,7 +82,7 @@ class CurrencyAccountRestControllerTest {
     private static Answer specification(CurrencyAccountId currencyAccountId) {
         return invocation -> {
             CurrencyAccountSpecification argument = invocation.getArgument(0);
-            if (argument.balance().compareTo(EXAMPLE_AMOUNT) != 0) {
+            if (argument.initialBalance().compareTo(EXAMPLE_AMOUNT) != 0) {
                 Assertions.fail("Incorrectly parsed originalBalance");
             }
             return currencyAccountId;
@@ -115,9 +115,9 @@ class CurrencyAccountRestControllerTest {
     @Nested
     class Exchange {
         @Test
-        void toBase() throws Exception {
+        void toOriginal() throws Exception {
             var currencyAccountId = CurrencyAccountId.create();
-            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_BASE);
+            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_ORIGINAL);
 
             var result = mockMvc.perform(post(
                     "/api/currency-account/{accountId}/exchange",
@@ -127,13 +127,13 @@ class CurrencyAccountRestControllerTest {
             result.andDo(print())
                     .andExpect(status().isOk());
 
-            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToBaseCurrency(currencyAccountId, BigDecimal.ONE);
+            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToOriginalCurrency(currencyAccountId, BigDecimal.ONE);
         }
 
         @Test
-        void toTarget() throws Exception {
+        void toForeign() throws Exception {
             var currencyAccountId = CurrencyAccountId.create();
-            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_TARGET);
+            var exchangeCurrencyDto = new ExchangeCurrencyDto(BigDecimal.ONE, ExchangeCurrencyDto.Direction.TO_FOREIGN);
 
             var result = mockMvc.perform(post(
                     "/api/currency-account/{accountId}/exchange",
@@ -143,7 +143,7 @@ class CurrencyAccountRestControllerTest {
             result.andDo(print())
                     .andExpect(status().isOk());
 
-            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToTargetCurrency(currencyAccountId, BigDecimal.ONE);
+            Mockito.verify(mockCurrencyAccountCommandService, Mockito.times(1)).exchangeToForeignCurrency(currencyAccountId, BigDecimal.ONE);
         }
     }
 }

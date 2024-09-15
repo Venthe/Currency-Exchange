@@ -9,27 +9,27 @@ Content-Type: application/json
     "amount": 1000,
     "currency": "PLN"
   },
-  "exchange-currency": "USD"
+  "foreign-currency": "USD"
 }
 > {% client.global.set("accountId", response.body.id); %}
 
 ### Get account information (uses saved accountId)
 GET {{url}}/api/currency-account/{{accountId}}
 
-### Exchange currency to target (uses saved accountId)
+### Exchange original currency to foreign (uses saved accountId)
 POST {{url}}/api/currency-account/{{accountId}}/exchange
 Content-Type: application/json
 
 {
-  "direction": "TO_TARGET",
+  "direction": "TO_FOREIGN",
   "amount": 50
 }
 
-### Exchange currency to base (uses saved accountId)
+### Exchange foreign currency to original (uses saved accountId)
 POST {{url}}/api/currency-account/{{accountId}}/exchange
 Content-Type: application/json
 
 {
-  "direction": "TO_BASE",
+  "direction": "TO_ORIGINAL",
   "amount": 50
 }

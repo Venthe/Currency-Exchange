@@ -18,7 +18,7 @@ public class CurrencyAccountRestController {
 
     @PostMapping("")
     private CurrencyAccountOpenedDto openAccount(@RequestBody CreateAccountDto accountDto) {
-        var specification = new CurrencyAccountSpecification(accountDto.name(), accountDto.surname(), accountDto.initialBalance(), accountDto.exchangeCurrency());
+        var specification = new CurrencyAccountSpecification(accountDto.name(), accountDto.surname(), accountDto.initialBalance(), accountDto.foreignCurrency());
         var openedAccountId = currencyAccountCommandService.openAccount(specification);
         return new CurrencyAccountOpenedDto(openedAccountId);
     }
@@ -26,10 +26,10 @@ public class CurrencyAccountRestController {
     @PostMapping("/{accountId}/exchange")
     private void exchangeCurrency(@PathVariable CurrencyAccountId accountId, @RequestBody ExchangeCurrencyDto exchangeCurrencyDto) {
         switch (exchangeCurrencyDto.direction()) {
-            case TO_BASE ->
-                    currencyAccountCommandService.exchangeToBaseCurrency(accountId, exchangeCurrencyDto.amount());
-            case TO_TARGET ->
-                    currencyAccountCommandService.exchangeToTargetCurrency(accountId, exchangeCurrencyDto.amount());
+            case TO_ORIGINAL ->
+                    currencyAccountCommandService.exchangeToOriginalCurrency(accountId, exchangeCurrencyDto.amount());
+            case TO_FOREIGN ->
+                    currencyAccountCommandService.exchangeToForeignCurrency(accountId, exchangeCurrencyDto.amount());
             default -> throw new UnsupportedOperationException();
         }
     }

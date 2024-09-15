@@ -6,5 +6,5 @@ import lombok.With;
 import java.util.Currency;
 
 @With
-public record CurrencyAccountSpecification(String name, String surname, Money balance, Currency exchangeCurrency) {
+public record CurrencyAccountSpecification(String name, String surname, Money initialBalance, Currency foreignCurrency) {
 }

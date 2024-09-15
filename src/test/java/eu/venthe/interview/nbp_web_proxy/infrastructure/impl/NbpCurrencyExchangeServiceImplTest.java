@@ -40,7 +40,7 @@ class NbpCurrencyExchangeServiceImplTest {
     static final ZonedDateTime NOW = ZonedDateTime.of(LocalDateTime.of(2023, Month.APRIL, 1, 12, 0), ZoneId.of("UTC"));
 
     ClockService mockClockService;
-    CacheManager<NbpRate> cacheManager;
+    CacheManager<NBPExchangeRate> cacheManager;
     DefaultApi mockApi;
     CurrencyExchangeService currencyExchangeService;
 
@@ -87,11 +87,11 @@ class NbpCurrencyExchangeServiceImplTest {
     }
 
     @Test
-    void nonPlnExchangeNotSupported() {
+    void nonPLnExchangeNotSupported() {
         Assertions.assertThatThrownBy(() ->
                         currencyExchangeService.exchange(of(BigDecimal.ONE, USD), Currency.getInstance("CHF")))
                 .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessage("At this point we don't support exchanging between two non-PLN currencies. Base currency=USD, Target currency=CHF");
+                .hasMessage("At this point we don't support exchanging between two non-PLN currencies. Original currency=USD, Target currency=CHF");
     }
 
     @Test

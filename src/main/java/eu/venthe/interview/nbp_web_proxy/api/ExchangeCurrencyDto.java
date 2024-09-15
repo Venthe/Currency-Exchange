@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 public record ExchangeCurrencyDto(BigDecimal amount, Direction direction) {
 
     public enum Direction {
-        TO_BASE,
-        TO_TARGET;
+        TO_ORIGINAL,
+        TO_FOREIGN;
     }
 }
