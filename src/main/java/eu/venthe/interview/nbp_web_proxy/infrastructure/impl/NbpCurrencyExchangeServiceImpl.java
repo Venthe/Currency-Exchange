@@ -3,6 +3,8 @@ package eu.venthe.interview.nbp_web_proxy.infrastructure.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
+import eu.venthe.interview.nbp_web_proxy.shared_kernel.CacheManager;
+import eu.venthe.interview.nbp_web_proxy.shared_kernel.ClockService;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
 import eu.venthe.nbp.api.DefaultApi;
 import eu.venthe.nbp.model.Format;
@@ -12,15 +14,21 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Currency;
 
 @Slf4j
 public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
+    private final CacheManager<NbpRate> cacheManager;
+    private final ClockService clockService;
     private final DefaultApi apiClient;
 
-    public NbpCurrencyExchangeServiceImpl(DefaultApi apiClient) {
+    public NbpCurrencyExchangeServiceImpl(CacheManager<NbpRate> cacheManager, ClockService clockService, DefaultApi apiClient) {
+        this.clockService = clockService;
         this.apiClient = apiClient;
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -77,8 +85,15 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
         return money.getCurrency().equals(Money.PLN);
     }
 
-    // TODO: Cache the result
-    private Rate getNewestExchangeRateFor(Currency otherCurrency) throws CurrencyExchangeFailedException {
+    private NbpRate getNewestExchangeRateFor(Currency otherCurrency) throws CurrencyExchangeFailedException {
+        var expectedEffectiveDate = getExpectedEffectiveDateAdjustedForWeekends();
+        var cacheKey = getCacheKey(otherCurrency, expectedEffectiveDate);
+        if (cacheManager.isCached(cacheKey)) {
+            var cachedRate = cacheManager.retrieve(cacheKey).orElseThrow();
+            log.debug("Retrieved cached rate rate={}", cachedRate);
+            return cachedRate;
+        }
+
         // FIXME: Use apiExchangeratesRatesTableCodeGet
         //  For some reason, the object is not fully populated with data. To work around the issue, I'm extracting data
         //  from JsonNode manually.
@@ -96,11 +111,21 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
         }
         var rateNode = ratesNode.get(0);
 
-        return new Rate(
+        var nbpRate = new NbpRate(
                 toBigDecimal(rateNode.get("ask")),
                 toBigDecimal(rateNode.get("bid")),
                 toLocalDate(rateNode.get("effectiveDate"))
         );
+
+        // NBP publishes new rates between 7:45 and 8:15, so in the morning the rates should not be cached
+        // This also handles weekend backdate, as the published rates are already dated on friday
+        var rateCacheKey = getCacheKey(otherCurrency, nbpRate.effectiveDate());
+        if (!cacheManager.isCached(rateCacheKey)) {
+            log.debug("Storing rate in cache. Rate={}", nbpRate);
+            cacheManager.store(cacheKey, nbpRate);
+        }
+
+        return nbpRate;
     }
 
     private LocalDate toLocalDate(JsonNode node) {
@@ -111,16 +136,17 @@ public class NbpCurrencyExchangeServiceImpl implements CurrencyExchangeService {
         return new BigDecimal(node.asText());
     }
 
-    /**
-     * Represents a person with a name and an age.
-     *
-     * @param ask           The price a seller is willing to accept for a currency.
-     * @param bid           The price a buyer is willing to pay for a currency.
-     * @param effectiveDate The date on which the rate is taken into account.
-     */
-    private record Rate(BigDecimal ask,
-                        BigDecimal bid,
-                        LocalDate effectiveDate) {
+    // NBP publishes on work days
+    private LocalDate getExpectedEffectiveDateAdjustedForWeekends() {
+        var effectiveDate = clockService.getZonedNow().withZoneSameInstant(ZoneOffset.UTC).toLocalDate();
+        if (effectiveDate.getDayOfWeek() == DayOfWeek.SATURDAY || effectiveDate.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            return effectiveDate.minusDays(effectiveDate.getDayOfWeek().getValue() - 5);
+        }
+        return effectiveDate;
+    }
 
+    // NBP publishes usually between 7:45 and 8:15 CET; but for our purposes we only need to know should we store for "today"
+    private String getCacheKey(Currency otherCurrency, LocalDate localDate) {
+        return "%s_%s".formatted(otherCurrency.getCurrencyCode(), localDate);
     }
 }
