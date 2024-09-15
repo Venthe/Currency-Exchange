@@ -15,6 +15,10 @@ java {
     }
 }
 
+tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    this.archiveFileName.set("application.${archiveExtension.get()}")
+}
+
 repositories {
     mavenCentral()
 }

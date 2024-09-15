@@ -14,3 +14,10 @@ Commits follow a "[good commit message](https://cbea.ms/git-commit/)" convention
     1. (Optional) Install using SdkMan!: `sdk install gradle 8.10`.
     2. (Optional) Install [manually](https://gradle.org/next-steps/?version=8.10&format=all).
     3. (Optional) Install as wrapper with existing gradle: `gradle wrapper --gradle-version 8.10`.
+
+## Build instruction
+
+1. Build application
+   1. Build using `gradle bootJar`
+   2. (Optional) Build using docker `bash ./build.sh` on linux
+   3. (Optional) Build using docker `build.ps1` on windows
