@@ -33,3 +33,11 @@ Content-Type: application/json
   "direction": "TO_ORIGINAL",
   "amount": 50
 }
+
+### Actuator
+
+GET {{url}}/actuator/health
+
+### Actuator
+
+GET {{url}}/actuator
