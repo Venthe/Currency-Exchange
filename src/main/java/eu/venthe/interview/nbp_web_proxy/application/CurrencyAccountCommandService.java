@@ -24,11 +24,12 @@ public class CurrencyAccountCommandService {
     public CurrencyAccountId openAccount(CurrencyAccountSpecification specification) {
         log.trace("Opening a currency account. Specification={}", specification);
 
-        var account = CurrencyAccount.open(auditLogger, currencyExchangeService, new CustomerInformation(specification.name(), specification.surname()), specification.initialBalance(), specification.foreignCurrency());
-        repository.save(account);
+        var result = CurrencyAccount.open(currencyExchangeService, new CustomerInformation(specification.name(), specification.surname()), specification.initialBalance(), specification.foreignCurrency());
+        repository.save(result.left());
+        auditLogger.log(result.right());
 
-        log.debug("Currency account {} opened.", account.getId());
-        return account.getId();
+        log.debug("Currency account {} opened.", result.left().getId());
+        return result.left().getId();
     }
 
     public void exchangeToForeignCurrency(CurrencyAccountId accountId, BigDecimal amount) {
@@ -37,8 +38,9 @@ public class CurrencyAccountCommandService {
         var currencyAccount = repository.find(accountId).orElseThrow();
 
         try {
-            currencyAccount.exchangeToForeignCurrency(amount);
+            var result = currencyAccount.exchangeToForeignCurrency(amount);
             repository.save(currencyAccount);
+            auditLogger.log(result);
 
             log.debug("Money exchange succeeded, AccountId={}", accountId);
         } catch (CurrencyExchangeFailedException e) {
@@ -52,8 +54,9 @@ public class CurrencyAccountCommandService {
         var currencyAccount = repository.find(accountId).orElseThrow();
 
         try {
-            currencyAccount.exchangeToOriginalCurrency(amount);
+            var result = currencyAccount.exchangeToOriginalCurrency(amount);
             repository.save(currencyAccount);
+            auditLogger.log(result);
 
             log.debug("Money exchange succeeded, AccountId={}", accountId);
         } catch (CurrencyExchangeFailedException e) {

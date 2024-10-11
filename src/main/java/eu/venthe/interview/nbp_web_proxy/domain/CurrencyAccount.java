@@ -1,8 +1,9 @@
 package eu.venthe.interview.nbp_web_proxy.domain;
 
-import eu.venthe.interview.nbp_web_proxy.domain.dependencies.AuditLogger;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeFailedException;
 import eu.venthe.interview.nbp_web_proxy.domain.dependencies.CurrencyExchangeService;
+import eu.venthe.interview.nbp_web_proxy.domain.event.AccountOpenedEvent;
+import eu.venthe.interview.nbp_web_proxy.domain.event.CurrencyExchangedEvent;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.Money;
 import eu.venthe.interview.nbp_web_proxy.shared_kernel.persistence.Aggregate;
 import lombok.AccessLevel;
@@ -26,8 +27,6 @@ import static eu.venthe.interview.nbp_web_proxy.shared_kernel.Money.USD;
 public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
     @Getter(AccessLevel.NONE)
     private final CurrencyExchangeService currencyExchangeService;
-    @Getter(AccessLevel.NONE)
-    private final AuditLogger auditLogger;
 
     @EqualsAndHashCode.Include
     private final CurrencyAccountId id;
@@ -42,9 +41,8 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
      */
     private Money foreignBalance;
 
-    private CurrencyAccount(AuditLogger auditLogger, CurrencyExchangeService currencyExchangeService, @NonNull CurrencyAccountId id, CustomerInformation customerInformation, @NonNull Money initialBalance, @NonNull Money initialForeignBalance) {
+    private CurrencyAccount(CurrencyExchangeService currencyExchangeService, @NonNull CurrencyAccountId id, CustomerInformation customerInformation, @NonNull Money initialBalance, @NonNull Money initialForeignBalance) {
         this.currencyExchangeService = currencyExchangeService;
-        this.auditLogger = auditLogger;
         validateCustomerInformation(customerInformation);
 
         this.id = id;
@@ -52,8 +50,6 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
         surname = customerInformation.surname();
         setOriginalBalance(initialBalance);
         setForeignBalance(initialForeignBalance);
-
-        auditLogger.accountOpened(id, originalBalance, foreignBalance);
     }
 
     private static void validateCustomerInformation(CustomerInformation customerInformation) {
@@ -91,15 +87,18 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
     }
 
     // TODO: Consider moving into a factory
-    public static CurrencyAccount open(AuditLogger auditLogger, CurrencyExchangeService currencyExchangeService, CustomerInformation customerInformation, Money initialBalance, Currency foreignCurrency) {
+    public static SimplePair<CurrencyAccount, AccountOpenedEvent> open(CurrencyExchangeService currencyExchangeService, CustomerInformation customerInformation, Money initialBalance, Currency foreignCurrency) {
         if (foreignCurrency != USD) {
             throw new UnsupportedOperationException("Opening different accounts than USD is not yet supported");
         }
 
-        return new CurrencyAccount(auditLogger, currencyExchangeService, CurrencyAccountId.create(), customerInformation, initialBalance, Money.of(BigDecimal.ZERO, USD));
+        var currencyAccount = new CurrencyAccount(currencyExchangeService, CurrencyAccountId.create(), customerInformation, initialBalance, Money.of(BigDecimal.ZERO, USD));
+        var event = new AccountOpenedEvent(currencyAccount.getId(), currencyAccount.getOriginalBalance(), currencyAccount.getForeignBalance());
+
+        return new SimplePair<>(currencyAccount, event);
     }
 
-    public void exchangeToForeignCurrency(BigDecimal amount) throws CurrencyExchangeFailedException {
+    public CurrencyExchangedEvent exchangeToForeignCurrency(BigDecimal amount) throws CurrencyExchangeFailedException {
         if (originalBalance.getAmount().compareTo(amount) < 0) {
             log.debug("Exchange to foreign currency failed. OriginalBalance={}, ForeignBalance={}", originalBalance, foreignBalance);
             throw new IllegalArgumentException("Exchanged amount cannot exceed the original initialBalance");
@@ -113,13 +112,15 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
         log.trace("Exchange succeeded. Exchanged={} to={}, Old OriginalBalance={}, New OriginalBalance={}, Old ForeignBalance={}, New ForeignBalance={}",
                 moneyToExchange, exchangedAmount, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
-        auditLogger.currencyExchanged(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
+        var event = new CurrencyExchangedEvent(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
         originalBalance = newOriginalBalance;
         foreignBalance = newForeignBalance;
+
+        return event;
     }
 
-    public void exchangeToOriginalCurrency(BigDecimal amount) throws CurrencyExchangeFailedException {
+    public CurrencyExchangedEvent exchangeToOriginalCurrency(BigDecimal amount) throws CurrencyExchangeFailedException {
         if (foreignBalance.getAmount().compareTo(amount) < 0) {
             log.debug("Exchange to original currency failed. OriginalBalance={}, ForeignBalance={}", originalBalance, foreignBalance);
             throw new IllegalArgumentException("Exchanged amount cannot exceed the exchanged initialBalance");
@@ -133,9 +134,14 @@ public class CurrencyAccount implements Aggregate<CurrencyAccountId> {
         log.trace("Exchange succeeded. Exchanged={} to={}, Old OriginalBalance={}, New OriginalBalance={}, Old ForeignBalance={}, New ForeignBalance={}",
                 moneyToExchange, exchangedAmount, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
-        auditLogger.currencyExchanged(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
+        var event = new CurrencyExchangedEvent(id, originalBalance, newOriginalBalance, foreignBalance, newForeignBalance);
 
         foreignBalance = newForeignBalance;
         originalBalance = newOriginalBalance;
+
+        return event;
+    }
+
+    public record SimplePair<T, U>(T left, U right) {
     }
 }
